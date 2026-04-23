@@ -41,7 +41,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     // 读取文件
     readFile: async () => {
-        const filePath = path.join(__dirname, 'file-pass.txt')
+        const filePath = path.join(process.cwd(), 'file-pass.txt')
         try {
             const data = await fs.promises.readFile(filePath, 'utf-8')
             return data
@@ -51,7 +51,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     // 写入文件
     writeFile: async (content) => {
-        const filePath = path.join(__dirname, 'file-pass.txt')
+        const filePath = path.join(process.cwd(), 'file-pass.txt')
         try {
             await fs.promises.writeFile(filePath, content, 'utf-8')
             return '写入成功'
@@ -60,7 +60,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         }
     },
     // 弹出消息对话框（通过 IPC 让主进程弹）
-    showMessage: (title, message) => ipcRenderer.send('show-message-box', { title, message })
+    showMessage: (title, message) => ipcRenderer.invoke('show-message-box', { title, message })
 })
 
 contextBridge.exposeInMainWorld('require', require)

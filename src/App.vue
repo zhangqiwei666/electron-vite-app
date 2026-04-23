@@ -33,6 +33,7 @@
     const writefile = async () => {
         const result = await window.electronAPI.writeFile(textValue.value)
         // 通过 IPC 让主进程弹对话框
-        window.electronAPI.showMessage('提示', result)
+        const res = window.electronAPI.showMessage('提示', result)
+        console.log(res)
     }
 </script>

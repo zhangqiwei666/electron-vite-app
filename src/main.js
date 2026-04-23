@@ -1,9 +1,13 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, globalShortcut, dialog } = require('electron')
 const path = require('node:path')
 const remote  = require('@electron/remote/main') 
+import {updataElectronApp} from 'update-electron-app'
 // remote 提供了一个桥梁 是我们能够在渲染器进程访问主进程属性个方法
 
-
+updataElectronApp({
+    repe: 'https://github.com/zhangqiwei666/electron-vite-app',
+    updateInterval: 60 * 60 * 1000,
+})
 remote.initialize()
 // Vite 自带 HMR，不需要 electron-reloader
 
@@ -13,7 +17,7 @@ let floatWindow = null // 悬浮球窗口
 
 // ── 托盘图标 ──────────────────────────────────────────────────
 function createTray() {
-    const icon = nativeImage.createFromPath(path.join(__dirname, 'icon.png'))
+    const icon = nativeImage.createFromPath(path.join(process.cwd(), 'src', 'icon.png'))
     tray = new Tray(icon)
     tray.setToolTip('我的firstElectron应用')
 
@@ -144,6 +148,17 @@ function createWindow() {
 ipcMain.on('show-main-window', () => {
     console.log('[main] 收到 show-main-window')
     showMainWindow()
+})
+
+// ── IPC：弹出消息对话框 ─────────────────────────────────────
+ipcMain.handle('show-message-box', async (event, { title, message }) => {
+    const result = await dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: title,
+        message: message,
+        buttons: ['确定']
+    })
+    return result
 })
 
 // ── IPC：悬浮球 JS 手动拖拽 ────────────────────────────────
