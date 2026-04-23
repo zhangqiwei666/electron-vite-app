@@ -24,6 +24,19 @@ module.exports = {
       config: {},
     },
   ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'zhangqiwei666',
+          name: 'electron-vite-app',
+        },
+        prerelease: false,
+        draft: true, // 先创建为草稿，确认无误后再手动发布
+      },
+    },
+  ],
   plugins: [
     {
       name: '@electron-forge/plugin-vite',
