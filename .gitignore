@@ -90,3 +90,6 @@ typings/
 
 # Electron-Forge
 out/
+
+# rewrite txt
+.txt

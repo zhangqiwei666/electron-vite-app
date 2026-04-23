@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>悬浮球</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 60px;
+      height: 60px;
+      border-radius: 100%;
+      background: transparent;
+      overflow: hidden;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .float-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-image: url("icon.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      /* background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%); */
+      box-shadow:
+        0 4px 20px rgba(33, 36, 37, 0.6),
+        0 0 0 2px rgba(100, 181, 246, 0.3),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      position: relative;
+      /* 不使用 -webkit-app-region: drag，改用 JS 手动拖拽 */
+    }
+
+    .float-btn:hover {
+      transform: scale(1.05);
+      box-shadow:
+        0 6px 28px rgba(2, 136, 209, 0.85),
+        0 0 0 3px rgba(100, 181, 246, 0.5),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      opacity: 1 !important;
+    }
+
+    .float-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* 闪电图标 SVG */
+    .float-btn svg {
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(100, 181, 246, 0.9));
+    }
+
+    /* 脉冲光晕动画 */
+    .pulse-ring {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid rgba(100, 181, 246, 0.6);
+      animation: pulse 2s ease-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(1);   opacity: 0.8; }
+      100% { transform: scale(1.7); opacity: 0; }
+    }   
+  </style>
+</head>
+<body>
+  <div class="float-btn" id="floatBtn">
+    <div class="pulse-ring"></div>
+    <!-- 闪电 SVG 图标 -->
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"
+        fill="url(#bolt-grad)"
+        stroke="rgba(200,230,255,0.4)"
+        stroke-width="0.5"
+      />
+      <defs>
+        <linearGradient id="bolt-grad" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#e3f2fd"/>
+          <stop offset="100%" stop-color="#64b5f6"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron')
+
+    // ═══ JS 手动拖拽 + 点击区分 ═══
+    // 原理：不用 -webkit-app-region:drag（它会吞掉所有鼠标事件）
+    // 改为自己监听 mousedown/mousemove/mouseup，通过 IPC 移动窗口
+    // 移动距离 < 5px → 视为点击；>= 5px → 视为拖拽
+
+    const DRAG_THRESHOLD = 5
+    let isDragging = false
+    let isMouseDown = false
+    let startScreenX = 0
+    let startScreenY = 0
+
+    const btn = document.getElementById('floatBtn')
+
+    btn.addEventListener('mousedown', (e) => {
+      isMouseDown = true
+      isDragging = false
+      startScreenX = e.screenX
+      startScreenY = e.screenY
+      // 通知主进程：开始拖拽（记录窗口初始位置）
+      ipcRenderer.send('float-drag-start', { x: e.screenX, y: e.screenY })
+    })
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isMouseDown) return
+      const dx = e.screenX - startScreenX
+      const dy = e.screenY - startScreenY
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+        isDragging = true
+      }
+      if (isDragging) {
+        // 通知主进程移动窗口
+        ipcRenderer.send('float-drag-move', { x: e.screenX, y: e.screenY })
+      }
+    })
+
+    window.addEventListener('mouseup', () => {
+      if (isMouseDown && !isDragging) {
+        // 移动距离小于阈值 → 是点击
+        ipcRenderer.send('show-main-window')
+      }
+      isMouseDown = false
+      isDragging = false
+    })
+  </script>
+</body>
+</html>
