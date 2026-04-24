@@ -66,6 +66,53 @@ contextBridge.exposeInMainWorld('electronAPI', {
     installUpdate: () => ipcRenderer.send('install-update'),
     // 开发专用：模拟更新阶段（checking / available / downloading / not-available / error）
     simulateUpdate: (stage) => ipcRenderer.send('simulate-update', stage),
+
+    // ── 系统性能监控 API ─────────────────────────────────────
+    // 获取实时 CPU 使用率（通过两次采样计算）
+    getCpuUsage: () => {
+        return new Promise((resolve) => {
+            const cpus1 = os.cpus()
+            setTimeout(() => {
+                const cpus2 = os.cpus()
+                const result = cpus2.map((cpu, i) => {
+                    const prev = cpus1[i].times
+                    const curr = cpu.times
+                    const idle = curr.idle - prev.idle
+                    const total = (curr.user - prev.user) + (curr.nice - prev.nice) +
+                                  (curr.sys - prev.sys) + (curr.irq - prev.irq) + idle
+                    return { core: i, usage: total > 0 ? Math.round(((total - idle) / total) * 100) : 0 }
+                })
+                const avg = Math.round(result.reduce((s, c) => s + c.usage, 0) / result.length)
+                resolve({ cores: result, average: avg })
+            }, 500)
+        })
+    },
+    // 获取内存使用情况
+    getMemoryInfo: () => {
+        const total = os.totalmem()
+        const free = os.freemem()
+        const used = total - free
+        return {
+            total, free, used,
+            totalGB: (total / 1024 / 1024 / 1024).toFixed(1),
+            usedGB: (used / 1024 / 1024 / 1024).toFixed(1),
+            freeGB: (free / 1024 / 1024 / 1024).toFixed(1),
+            percent: Math.round((used / total) * 100)
+        }
+    },
+    // 获取 GPU 信息（通过 IPC 调用主进程）
+    getGpuInfo: () => ipcRenderer.invoke('get-gpu-info'),
+    // 获取系统运行时间
+    getUptime: () => {
+        const sec = os.uptime()
+        const h = Math.floor(sec / 3600)
+        const m = Math.floor((sec % 3600) / 60)
+        return `${h} 小时 ${m} 分钟`
+    },
+
+    // ── 设置相关 API ─────────────────────────────────────────
+    // 选择文件夹
+    selectFolder: () => ipcRenderer.invoke('select-folder'),
 })
 
 contextBridge.exposeInMainWorld('require', require)
