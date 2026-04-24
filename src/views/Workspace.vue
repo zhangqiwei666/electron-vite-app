@@ -286,4 +286,5 @@ onMounted(() => { cursorLine.value = 1; cursorCol.value = 1 })
 .status-item { padding:2px 8px; font-size:11px; color:#6c7086; cursor:default; font-family:'Segoe UI',sans-serif; }
 .status-item.branch { color:#a6e3a1; }
 .status-item.notify { cursor:pointer; }
+
 </style>
