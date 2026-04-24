@@ -33,7 +33,8 @@ module.exports = {
           name: 'electron-vite-app',
         },
         prerelease: false,
-        draft: true, // 先创建为草稿，确认无误后再手动发布
+        draft: false, // 先创建为草稿，确认无误后再手动发布
+        generateReleaseNotes: true // 自动生成更新日志（可选）
       },
     },
   ],
