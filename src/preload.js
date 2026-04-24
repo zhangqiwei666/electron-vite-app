@@ -60,7 +60,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         }
     },
     // 弹出消息对话框（通过 IPC 让主进程弹）
-    showMessage: (title, message) => ipcRenderer.invoke('show-message-box', { title, message })
+    showMessage: (title, message) => ipcRenderer.invoke('show-message-box', { title, message }),
+    // ── 更新相关 API ──────────────────────────────────────────
+    onUpdateStatus: (callback) => ipcRenderer.on('update-status', (event, data) => callback(data)),
+    installUpdate: () => ipcRenderer.send('install-update'),
+    // 开发专用：模拟更新阶段（checking / available / downloading / not-available / error）
+    simulateUpdate: (stage) => ipcRenderer.send('simulate-update', stage),
 })
 
 contextBridge.exposeInMainWorld('require', require)

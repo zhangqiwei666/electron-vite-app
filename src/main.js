@@ -1,13 +1,94 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, globalShortcut, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, globalShortcut, dialog, autoUpdater } = require('electron')
 const path = require('node:path')
-const remote  = require('@electron/remote/main') 
-import {updataElectronApp} from 'update-electron-app'
+const remote  = require('@electron/remote/main')
+const { updateElectronApp, UpdateSourceType } = require('update-electron-app')
 // remote 提供了一个桥梁 是我们能够在渲染器进程访问主进程属性个方法
 
-updataElectronApp({
-    repe: 'https://github.com/zhangqiwei666/electron-vite-app',
-    updateInterval: 60 * 60 * 1000,
+// ── 自动更新配置 ────────────────────────────────────────────
+updateElectronApp({
+    updateSource: {
+        type: UpdateSourceType.ElectronPublicUpdateService,
+        repo: 'https://github.com/zhangqiwei666/electron-vite-app',
+    },
+    updateInterval: '1 hour',
+    notifyUser: false, // 关闭默认通知，改用自定义 IPC 通知
 })
+
+// 监听 autoUpdater 事件，通过 IPC 推送更新状态到渲染进程
+function sendUpdateStatus(event, payload = {}) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update-status', { event, ...payload })
+    }
+}
+
+autoUpdater.on('checking-for-update', () => {
+    console.log('[updater] 检查更新中...')
+    sendUpdateStatus('checking')
+})
+
+autoUpdater.on('update-available', (info) => {
+    console.log('[updater] 发现新版本:', info)
+    sendUpdateStatus('available', { version: info.version })
+})
+
+autoUpdater.on('update-not-available', () => {
+    console.log('[updater] 已是最新版本')
+    sendUpdateStatus('not-available')
+})
+
+autoUpdater.on('download-progress', (progress) => {
+    console.log('[updater] 下载进度:', progress.percent.toFixed(1) + '%')
+    sendUpdateStatus('downloading', { percent: Math.round(progress.percent), bytesPerSecond: progress.bytesPerSecond })
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+    console.log('[updater] 更新下载完成:', info)
+    sendUpdateStatus('downloaded', { version: info.version })
+})
+
+autoUpdater.on('error', (err) => {
+    console.error('[updater] 更新错误:', err.message)
+    sendUpdateStatus('error', { message: err.message })
+})
+
+// IPC：渲染进程确认安装更新
+ipcMain.on('install-update', () => {
+    autoUpdater.quitAndInstall()
+})
+
+// ── 开发模式专用：模拟更新流程 ────────────────────────────────
+// 生产环境中此 IPC 也存在但无害，仅用于 UI 测试
+ipcMain.on('simulate-update', (event, stage) => {
+    console.log('[dev] 模拟更新阶段:', stage)
+    switch (stage) {
+        case 'checking':
+            sendUpdateStatus('checking')
+            break
+        case 'available':
+            sendUpdateStatus('available', { version: '2.0.0' })
+            break
+        case 'downloading': {
+            // 模拟下载进度 0→100%
+            let pct = 0
+            const timer = setInterval(() => {
+                pct += 10
+                sendUpdateStatus('downloading', { percent: pct, bytesPerSecond: 512000 })
+                if (pct >= 100) {
+                    clearInterval(timer)
+                    sendUpdateStatus('downloaded', { version: '2.0.0' })
+                }
+            }, 400)
+            break
+        }
+        case 'not-available':
+            sendUpdateStatus('not-available')
+            break
+        case 'error':
+            sendUpdateStatus('error', { message: '无法连接到更新服务器' })
+            break
+    }
+})
+
 remote.initialize()
 // Vite 自带 HMR，不需要 electron-reloader
 
