@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, globalShortcut, dialog, autoUpdater } = require('electron')
 const path = require('node:path')
-const remote  = require('@electron/remote/main')
+// const remote  = require('@electron/remote/main')
 const { updateElectronApp, UpdateSourceType } = require('update-electron-app')
 // remote 提供了一个桥梁 是我们能够在渲染器进程访问主进程属性个方法
 
@@ -89,7 +89,7 @@ ipcMain.on('simulate-update', (event, stage) => {
     }
 })
 
-remote.initialize()
+// remote.initialize()
 // Vite 自带 HMR，不需要 electron-reloader
 
 let tray = null
@@ -266,8 +266,9 @@ ipcMain.on('float-drag-move', (event, { x, y }) => {
 
 // ── 启动 ─────────────────────────────────────────────────────
 app.whenReady().then(() => {
-    const win = createWindow()
-    remote.enable(win.webContents) // 允许渲染进程使用 remote 模块 获取 主进程信息和能力
+    createWindow()
+    // const win = createWindow()
+    // remote.enable(win.webContents) // 允许渲染进程使用 remote 模块 获取 主进程信息和能力
     createTray()
     createFloatWindow()
     
