@@ -195,11 +195,29 @@ function createWindow() {
         if (permission === 'hid' && details.securityOrigin === 'file:///') {
             return true
         }
+        if (permission === 'bluetooth') {
+            return true
+        }
     })
 
     mainWindow.webContents.session.setDevicePermissionHandler((details) => {
         if (details.deviceType === 'hid' && details.origin === 'file://') {
             return true
+        }
+        if (details.deviceType === 'bluetooth') {
+            return true
+        }
+    })
+
+    // Web Bluetooth API 拦截处理
+    mainWindow.webContents.session.on('select-bluetooth-device', (event, deviceList, callback) => {
+        event.preventDefault()
+        console.log('[Web Bluetooth] 请求设备列表:', deviceList)
+        if (deviceList && deviceList.length > 0) {
+            // 默认选择第一个扫描到的设备
+            callback(deviceList[0].deviceId)
+        } else {
+            callback('') // 没扫描到或者取消
         }
     })
 
@@ -211,7 +229,7 @@ function createWindow() {
     }
 
     // 打开开发者工具
-    mainWindow.webContents.openDevTools()
+    //mainWindow.webContents.openDevTools()
 
     // 点击关闭 → 隐藏主窗口，显示悬浮球
     mainWindow.on('close', (event) => {
@@ -242,6 +260,74 @@ ipcMain.handle('show-message-box', async (event, { title, message }) => {
     return result
 })
 
+// ── IPC：获取真实的硬件设备列表和 GPU 信息 ───────────────────────
+ipcMain.handle('get-gpu-info', async () => {
+    return await app.getGPUInfo('complete')
+})
+
+ipcMain.handle('get-usb-devices', () => {
+    return new Promise((resolve) => {
+        require('child_process').exec('powershell -Command "[console]::OutputEncoding = [System.Text.Encoding]::UTF8; Get-PnpDevice -Class USB | Select-Object Name, DeviceID | ConvertTo-Json"', { encoding: 'utf8' }, (err, stdout) => {
+            if (err) { resolve([]); return; }
+            try {
+                let data = JSON.parse(stdout);
+                if (!Array.isArray(data)) data = [data]; // PowerShell 只有一个对象时不会返回数组
+                resolve(data.filter(d => d && d.Name).map((d, i) => {
+                    // 尝试从 DeviceID 中提取 VID/PID，如 USB\VID_05AC&PID_024F
+                    let vid = 'N/A', pid = 'N/A';
+                    const vidMatch = d.DeviceID.match(/VID_([0-9A-F]+)/);
+                    const pidMatch = d.DeviceID.match(/PID_([0-9A-F]+)/);
+                    if (vidMatch) vid = vidMatch[1];
+                    if (pidMatch) pid = pidMatch[1];
+                    return { id: 'u' + i, name: d.Name, vendorId: vid, productId: pid, deviceId: d.DeviceID };
+                }));
+            } catch (e) { resolve([]); }
+        });
+    });
+})
+
+ipcMain.handle('get-bluetooth-devices', () => {
+    return new Promise((resolve) => {
+        require('child_process').exec('powershell -Command "[console]::OutputEncoding = [System.Text.Encoding]::UTF8; Get-PnpDevice -Class Bluetooth | Select-Object Name, DeviceID, Status, Present | ConvertTo-Json"', { encoding: 'utf8' }, (err, stdout) => {
+            if (err) { resolve([]); return; }
+            try {
+                let data = JSON.parse(stdout);
+                if (!Array.isArray(data)) data = [data];
+                resolve(data.filter(d => d && d.Name).map((d, i) => {
+                    let mac = 'Unknown';
+                    const parts = d.DeviceID.split('_');
+                    if (parts.length > 1) mac = parts[parts.length - 1];
+                    // Present 为 true 表示设备当前在线/已连接
+                    const isConnected = d.Present === true; 
+                    return { id: 'b' + i, name: d.Name, connected: isConnected, mac: mac, deviceId: d.DeviceID };
+                }));
+            } catch (e) { resolve([]); }
+        });
+    });
+})
+
+// ── IPC：蓝牙连接与断开 (调用系统级接口) ────────────────────────
+ipcMain.handle('connect-bluetooth', async (event, deviceId) => {
+    // 注意：Windows 没有原生直接连接蓝牙的命令行工具。
+    // 真正的系统级连接通常需要调用 WinRT API 或使用 node-bluetooth/noble 等 C++ 原生模块。
+    // 这里我们先走通 Electron 的通信链路，模拟真实的异步连接行为：
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            console.log(`[Bluetooth] 连接设备: ${deviceId}`);
+            resolve({ success: true, message: '连接请求已发送' });
+        }, 1500);
+    });
+})
+
+ipcMain.handle('disconnect-bluetooth', async (event, deviceId) => {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            console.log(`[Bluetooth] 断开设备: ${deviceId}`);
+            resolve({ success: true, message: '设备已断开连接' });
+        }, 1000);
+    });
+})
+
 // ── IPC：悬浮球 JS 手动拖拽 ────────────────────────────────
 let dragStartWinX = 0
 let dragStartWinY = 0
@@ -262,6 +348,30 @@ ipcMain.on('float-drag-move', (event, { x, y }) => {
     const newX = dragStartWinX + (x - dragStartMouseX)
     const newY = dragStartWinY + (y - dragStartMouseY)
     floatWindow.setPosition(newX, newY)
+})
+
+// ── IPC：创建独立的 Chat AI 会话窗口 ────────────────────────
+ipcMain.on('open-chat-window', () => {
+    const chatWin = new BrowserWindow({
+        width: 800,
+        height: 600,
+        minWidth: 400,
+        minHeight: 500,
+        titleBarStyle: 'hiddenInset',
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: false,
+            contextIsolation: true
+        }
+    })
+
+    const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
+
+    if (isDev) {
+        chatWin.loadURL('http://localhost:5173/#/chat')
+    } else {
+        chatWin.loadFile(path.join(__dirname, '../dist/index.html'), { hash: 'chat' })
+    }
 })
 
 // ── 启动 ─────────────────────────────────────────────────────

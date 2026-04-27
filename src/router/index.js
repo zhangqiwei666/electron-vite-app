@@ -53,8 +53,20 @@ const routes = [
         name: 'Monitor',
         component: () => import('../views/workspace/SystemMonitor.vue'),
         meta: { title: '系统监控' }
+      },
+      {
+        path: 'devices',
+        name: 'Devices',
+        component: () => import('../views/DeviceManager.vue'),
+        meta: { title: '设备管理' }
       }
     ]
+  },
+  {
+    path: '/chat',
+    name: 'ChatAI',
+    component: () => import('../views/ChatAI.vue'),
+    meta: { requiresAuth: false } // 独立窗口，不限制鉴权
   }
 ]
 

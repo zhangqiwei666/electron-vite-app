@@ -73,6 +73,9 @@
               class="search-input"
             />
           </div>
+          <el-button type="primary" size="default" class="chat-btn" @click="openChatWindow">
+            <el-icon class="btn-icon"><ChatDotRound /></el-icon> Chat AI
+          </el-button>
           <el-button type="danger" size="default" class="new-task-btn" @click="showNewTask = true">
             + 新建任务
           </el-button>
@@ -94,7 +97,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Search, Setting, Grid, ChatDotRound, DataLine, User, FolderOpened, Monitor, SwitchButton } from '@element-plus/icons-vue'
+import { Search, Setting, Grid, ChatDotRound, DataLine, User, FolderOpened, Monitor, SwitchButton, Connection } from '@element-plus/icons-vue'
 import SettingsDialog from '../components/SettingsDialog.vue'
 import NewTaskDialog from '../components/NewTaskDialog.vue'
 
@@ -112,6 +115,7 @@ const navItems = [
   { path: '/workspace/users', title: '用户数据', icon: User },
   { path: '/workspace/files', title: '资料管理', icon: FolderOpened },
   { path: '/workspace/monitor', title: '系统监控', icon: Monitor },
+  { path: '/workspace/devices', title: '设备管理', icon: Connection },
 ]
 
 const currentPath = computed(() => route.path)
@@ -128,6 +132,15 @@ const todayStr = computed(() => {
 
 function onTaskCreated(task) {
   console.log('新任务已创建:', task)
+}
+
+function openChatWindow() {
+  if (window.electronAPI && window.electronAPI.openChatWindow) {
+    window.electronAPI.openChatWindow()
+  } else {
+    // 降级处理：如果在纯浏览器中运行
+    window.open(window.location.origin + window.location.pathname + '#/chat', '_blank', 'width=800,height=600')
+  }
 }
 
 // ═══ 退出登录 & 切换用户 ═══

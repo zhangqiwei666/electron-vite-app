@@ -150,13 +150,13 @@ function initPieChart() {
       formatter: '{b}: {c} ({d}%)'
     },
     legend: {
-      orient: 'vertical',
-      bottom: 10,
+      orient: 'horizontal',
+      bottom: 0,
       left: 'center',
       itemWidth: 10,
       itemHeight: 10,
       textStyle: { color: '#666', fontSize: 12 },
-      itemGap: 10,
+      itemGap: 12,
       formatter: (name) => {
         const map = { '进行中': '34', '已完成': '30', '待处理': '14', '已关闭': '7' }
         return `${name}  ${map[name] || ''}`
@@ -164,8 +164,8 @@ function initPieChart() {
     },
     series: [{
       type: 'pie',
-      radius: ['45%', '70%'],
-      center: ['50%', '38%'],
+      radius: ['45%', '65%'],
+      center: ['50%', '45%'],
       avoidLabelOverlap: false,
       itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
       label: {

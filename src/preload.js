@@ -113,6 +113,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // ── 设置相关 API ─────────────────────────────────────────
     // 选择文件夹
     selectFolder: () => ipcRenderer.invoke('select-folder'),
+    
+    // ── 硬件设备 API ─────────────────────────────────────────
+    getUsbDevices: () => ipcRenderer.invoke('get-usb-devices'),
+    getBluetoothDevices: () => ipcRenderer.invoke('get-bluetooth-devices'),
+    connectBluetooth: (deviceId) => ipcRenderer.invoke('connect-bluetooth', deviceId),
+    disconnectBluetooth: (deviceId) => ipcRenderer.invoke('disconnect-bluetooth', deviceId),
+
+    // ── Chat AI ──────────────────────────────────────────────
+    openChatWindow: () => ipcRenderer.send('open-chat-window'),
 })
 
 contextBridge.exposeInMainWorld('require', require)

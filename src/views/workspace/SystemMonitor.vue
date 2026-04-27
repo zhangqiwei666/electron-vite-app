@@ -212,9 +212,9 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   clearInterval(pollTimer)
   window.removeEventListener('resize', handleResize)
-  cpuGauge?.dispose()
-  memGauge?.dispose()
-  trendChart?.dispose()
+  if (cpuGauge) { cpuGauge.dispose(); cpuGauge = null; }
+  if (memGauge) { memGauge.dispose(); memGauge = null; }
+  if (trendChart) { trendChart.dispose(); trendChart = null; }
 })
 </script>
 
