@@ -97,7 +97,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Search, Setting, Grid, ChatDotRound, DataLine, User, FolderOpened, Monitor, SwitchButton, Connection } from '@element-plus/icons-vue'
+import { Search, Setting, Grid, ChatDotRound, DataLine, User, FolderOpened, Monitor, SwitchButton, Connection, Document } from '@element-plus/icons-vue'
 import SettingsDialog from '../components/SettingsDialog.vue'
 import NewTaskDialog from '../components/NewTaskDialog.vue'
 
@@ -116,6 +116,7 @@ const navItems = [
   { path: '/workspace/files', title: '资料管理', icon: FolderOpened },
   { path: '/workspace/monitor', title: '系统监控', icon: Monitor },
   { path: '/workspace/devices', title: '设备管理', icon: Connection },
+  { path: '/workspace/resume', title: '智能简历', icon: Document },
 ]
 
 const currentPath = computed(() => route.path)

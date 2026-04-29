@@ -59,6 +59,12 @@ const routes = [
         name: 'Devices',
         component: () => import('../views/DeviceManager.vue'),
         meta: { title: '设备管理' }
+      },
+      {
+        path: 'resume',
+        name: 'ResumeOptimizer',
+        component: () => import('../views/workspace/ResumeOptimizer.vue'),
+        meta: { title: '智能简历' }
       }
     ]
   },
