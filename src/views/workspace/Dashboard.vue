@@ -113,8 +113,8 @@ const metrics = ref([
   { label: '文档覆盖率', value: '63%', percent: 63, color: '#f39c12', sub: '目标 ≥ 80% · 待提升' },
 ])
 
-const headerStyle = { background: '#fafafa', color: '#999', fontSize: '12px', fontWeight: 500, borderBottom: '1px solid #f0f0f0', padding: '10px 0' }
-const cellStyle = { fontSize: '13px', color: '#333', padding: '12px 0', borderBottom: '1px solid #f5f5f5' }
+const headerStyle = { background: 'var(--el-fill-color-light)', color: 'var(--el-text-color-secondary)', fontSize: '12px', fontWeight: 500, padding: '10px 0' }
+const cellStyle = { fontSize: '13px', color: 'var(--el-text-color-primary)', padding: '12px 0', background: 'transparent' }
 </script>
 
 <style scoped>

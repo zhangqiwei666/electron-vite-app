@@ -99,7 +99,7 @@
   </div>
 
   <script>
-    const { ipcRenderer } = require('electron')
+    const electronAPI = window.electronAPI
 
     // ═══ JS 手动拖拽 + 点击区分 ═══
     // 原理：不用 -webkit-app-region:drag（它会吞掉所有鼠标事件）
@@ -120,7 +120,9 @@
       startScreenX = e.screenX
       startScreenY = e.screenY
       // 通知主进程：开始拖拽（记录窗口初始位置）
-      ipcRenderer.send('float-drag-start', { x: e.screenX, y: e.screenY })
+      if (electronAPI && electronAPI.floatDragStart) {
+        electronAPI.floatDragStart(e.screenX, e.screenY)
+      }
     })
 
     window.addEventListener('mousemove', (e) => {
@@ -132,14 +134,18 @@
       }
       if (isDragging) {
         // 通知主进程移动窗口
-        ipcRenderer.send('float-drag-move', { x: e.screenX, y: e.screenY })
+        if (electronAPI && electronAPI.floatDragMove) {
+          electronAPI.floatDragMove(e.screenX, e.screenY)
+        }
       }
     })
 
     window.addEventListener('mouseup', () => {
       if (isMouseDown && !isDragging) {
         // 移动距离小于阈值 → 是点击
-        ipcRenderer.send('show-main-window')
+        if (electronAPI && electronAPI.showMainWindow) {
+          electronAPI.showMainWindow()
+        }
       }
       isMouseDown = false
       isDragging = false

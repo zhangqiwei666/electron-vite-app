@@ -134,7 +134,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Document, UploadFilled, MagicStick, CopyDocument, Download, Monitor } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import mammoth from 'mammoth'
@@ -152,6 +152,45 @@ const optimizedResult = ref('')
 const apiKey = ref('')
 const baseURL = ref('https://api.openai.com/v1')
 const modelName = ref('gpt-3.5-turbo')
+
+function loadLocalSettings() {
+  try {
+    const saved = localStorage.getItem('app-settings')
+    if (saved) {
+      const data = JSON.parse(saved)
+      apiKey.value = data.apiKey || ''
+      baseURL.value = data.baseURL || 'https://api.openai.com/v1'
+      modelName.value = data.modelName || 'gpt-3.5-turbo'
+    }
+  } catch (e) {
+    console.error('加载本地设置失败', e)
+  }
+}
+
+function saveLocalSettings() {
+  try {
+    const saved = localStorage.getItem('app-settings')
+    let data = {}
+    if (saved) {
+      data = JSON.parse(saved)
+    }
+    data.apiKey = apiKey.value
+    data.baseURL = baseURL.value
+    data.modelName = modelName.value
+    localStorage.setItem('app-settings', JSON.stringify(data))
+  } catch (e) {
+    console.error('保存本地设置失败', e)
+  }
+}
+
+// 监听变更并自动同步到 localStorage
+watch([apiKey, baseURL, modelName], () => {
+  saveLocalSettings()
+})
+
+onMounted(() => {
+  loadLocalSettings()
+})
 
 const handleFileDrop = async (file) => {
   if (!file) return

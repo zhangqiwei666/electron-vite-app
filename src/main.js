@@ -136,8 +136,10 @@ function createFloatWindow() {
         hasShadow: false,
         show: false, // 初始隐藏，主窗口关闭时才显示
         webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: false,
+            preload: path.join(__dirname, 'preload.js')
         }
     })
 
@@ -268,6 +270,13 @@ ipcMain.handle('get-gpu-info', async () => {
 
 ipcMain.handle('get-usb-devices', () => {
     return new Promise((resolve) => {
+        if (process.platform !== 'win32') {
+            resolve([
+                { id: 'u0', name: 'Apple Built-in FaceTime HD Camera', vendorId: '05AC', productId: '8514', deviceId: 'USB\\VID_05AC&PID_8514' },
+                { id: 'u1', name: 'Standard USB Keyboard', vendorId: '04F2', productId: '0112', deviceId: 'USB\\VID_04F2&PID_0112' }
+            ]);
+            return;
+        }
         require('child_process').exec('powershell -Command "[console]::OutputEncoding = [System.Text.Encoding]::UTF8; Get-PnpDevice -Class USB | Select-Object Name, DeviceID | ConvertTo-Json"', { encoding: 'utf8' }, (err, stdout) => {
             if (err) { resolve([]); return; }
             try {
@@ -289,6 +298,13 @@ ipcMain.handle('get-usb-devices', () => {
 
 ipcMain.handle('get-bluetooth-devices', () => {
     return new Promise((resolve) => {
+        if (process.platform !== 'win32') {
+            resolve([
+                { id: 'b0', name: 'Logitech MX Master 3S', connected: true, mac: '00:1E:C0:A4:7B:A2', deviceId: 'BT_MX_Master' },
+                { id: 'b1', name: 'Sony WH-1000XM4', connected: false, mac: '70:26:05:88:51:74', deviceId: 'BT_Sony_WH1000' }
+            ]);
+            return;
+        }
         require('child_process').exec('powershell -Command "[console]::OutputEncoding = [System.Text.Encoding]::UTF8; Get-PnpDevice -Class Bluetooth | Select-Object Name, DeviceID, Status, Present | ConvertTo-Json"', { encoding: 'utf8' }, (err, stdout) => {
             if (err) { resolve([]); return; }
             try {

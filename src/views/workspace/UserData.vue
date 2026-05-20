@@ -81,34 +81,36 @@ const filteredUsers = computed(() => {
   })
 })
 
-const headerStyle = { background: '#fafafa', color: '#999', fontSize: '12px', fontWeight: 500, padding: '10px 0' }
-const cellStyle = { fontSize: '13px', color: '#333', padding: '12px 0' }
+const headerStyle = { background: 'var(--el-fill-color-light)', color: 'var(--el-text-color-secondary)', fontSize: '12px', fontWeight: 500, padding: '10px 0' }
+const cellStyle = { fontSize: '13px', color: 'var(--el-text-color-primary)', padding: '12px 0', background: 'transparent' }
 </script>
 
 <style scoped>
 .user-data { display: flex; flex-direction: column; gap: 16px; }
-.ud-toolbar { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 12px; padding: 14px 20px; border: 1px solid #f0f0f0; }
+.ud-toolbar { display: flex; align-items: center; justify-content: space-between; background: var(--el-bg-color-overlay); border-radius: 12px; padding: 14px 20px; border: 1px solid var(--el-border-color-light); }
 .ud-toolbar-left { display: flex; gap: 10px; }
 :deep(.ud-search .el-input__wrapper) { border-radius: 8px; }
 
-.ud-table-wrap { background: #fff; border-radius: 12px; padding: 8px; border: 1px solid #f0f0f0; overflow: hidden; }
-:deep(.el-table) { --el-table-border-color: transparent; }
-:deep(.el-table th.el-table__cell) { background: #fafafa !important; }
-:deep(.el-table--enable-row-hover .el-table__body tr:hover > td) { background: #fafbfc !important; }
+.ud-table-wrap { background: var(--el-bg-color-overlay); border-radius: 12px; padding: 8px; border: 1px solid var(--el-border-color-light); overflow: hidden; }
+:deep(.el-table) { --el-table-border-color: transparent; background-color: transparent !important; }
+:deep(.el-table th.el-table__cell) { background: var(--el-fill-color-light) !important; }
+:deep(.el-table tr) { background-color: transparent !important; }
+:deep(.el-table td.el-table__cell) { border-bottom: 1px solid var(--el-border-color-light) !important; }
+:deep(.el-table--enable-row-hover .el-table__body tr:hover > td) { background: var(--el-fill-color-light) !important; }
 
 .user-cell { display: flex; align-items: center; gap: 12px; }
 .user-av { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; flex-shrink: 0; }
 .user-info { display: flex; flex-direction: column; }
-.user-name { font-weight: 600; color: #1a1a1a; font-size: 13px; }
-.user-email { font-size: 11px; color: #999; }
+.user-name { font-weight: 600; color: var(--el-text-color-primary); font-size: 13px; }
+.user-email { font-size: 11px; color: var(--el-text-color-secondary); }
 
 .role-tag { font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: 600; }
-.role-tag.admin { background: #fef3c7; color: #f39c12; }
-.role-tag.dev { background: #eff6ff; color: #3498db; }
-.role-tag.designer { background: #f5f3ff; color: #9b59b6; }
-.role-tag.pm { background: #f0fdf4; color: #27ae60; }
+.role-tag.admin { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
+.role-tag.dev { background: rgba(52, 152, 219, 0.15); color: #3498db; }
+.role-tag.designer { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+.role-tag.pm { background: rgba(39, 174, 96, 0.15); color: #27ae60; }
 
-.status-cell { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+.status-cell { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--el-text-color-regular); }
 .online-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; }
 .online-dot.on { background: #27ae60; box-shadow: 0 0 6px rgba(39,174,96,0.4); }
 </style>

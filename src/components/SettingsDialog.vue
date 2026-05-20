@@ -56,6 +56,49 @@
 
       <el-divider />
 
+      <!-- AI 助手设置 -->
+      <div class="setting-section">
+        <div class="setting-header">
+          <span class="setting-icon">🤖</span>
+          <div>
+            <h4 class="setting-title">AI 助手设置</h4>
+            <p class="setting-desc">配置大语言模型 API 凭证，用于智能对话与简历优化</p>
+          </div>
+        </div>
+        <div class="ai-settings-form">
+          <el-form label-position="top" size="default">
+            <el-form-item label="API 密钥 (API Key)">
+              <el-input
+                v-model="settings.apiKey"
+                type="password"
+                show-password
+                placeholder="请输入您的 API 密钥..."
+              />
+            </el-form-item>
+            <el-row :gutter="12">
+              <el-col :span="12">
+                <el-form-item label="接口地址 (Base URL)">
+                  <el-input
+                    v-model="settings.baseURL"
+                    placeholder="例如 https://api.openai.com/v1"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="模型名称 (Model Name)">
+                  <el-input
+                    v-model="settings.modelName"
+                    placeholder="例如 gpt-3.5-turbo, gpt-4o"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+        </div>
+      </div>
+
+      <el-divider />
+
       <!-- 外观 -->
       <div class="setting-section">
         <div class="setting-header">
@@ -88,6 +131,7 @@
 
 <script setup>
 import { reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import GlobalDialog from './GlobalDialog.vue'
 
 const props = defineProps({
@@ -108,7 +152,10 @@ const settings = reactive({
     { label: '退出应用', keys: 'Ctrl + Shift + Q', action: 'quit' },
     { label: '新建任务', keys: 'Ctrl + N', action: 'new-task' },
     { label: '全局搜索', keys: 'Ctrl + K', action: 'search' },
-  ]
+  ],
+  apiKey: '',
+  baseURL: 'https://api.openai.com/v1',
+  modelName: 'gpt-3.5-turbo'
 })
 
 async function selectDownloadPath() {
@@ -158,6 +205,9 @@ function loadSettings() {
       if (data.downloadPath) settings.downloadPath = data.downloadPath
       if (data.theme) settings.theme = data.theme
       if (data.shortcuts) settings.shortcuts = data.shortcuts
+      settings.apiKey = data.apiKey || ''
+      settings.baseURL = data.baseURL || 'https://api.openai.com/v1'
+      settings.modelName = data.modelName || 'gpt-3.5-turbo'
     }
   } catch {}
 }
@@ -204,4 +254,10 @@ onMounted(() => loadSettings())
 .theme-preview.light { background: linear-gradient(135deg, #fff, #f5f5f7); }
 .theme-preview.dark { background: linear-gradient(135deg, #1a1a2e, #16213e); }
 .theme-preview.auto { background: linear-gradient(135deg, #fff 50%, #1a1a2e 50%); }
+
+/* AI 助手设置 */
+.ai-settings-form { padding-left: 34px; }
+.ai-settings-form :deep(.el-form-item) { margin-bottom: 12px; }
+.ai-settings-form :deep(.el-form-item__label) { padding-bottom: 4px; font-size: 12px; font-weight: 500; color: var(--el-text-color-regular); }
+.ai-settings-form :deep(.el-input__wrapper) { border-radius: 8px; }
 </style>

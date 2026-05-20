@@ -72,6 +72,7 @@ let cpuGauge = null
 let memGauge = null
 let trendChart = null
 let pollTimer = null
+let observer = null
 
 // 历史数据（60个点）
 const historyLabels = ref([])
@@ -157,6 +158,46 @@ function initTrendChart() {
   })
 }
 
+function updateChartsTheme() {
+  const isDark = document.documentElement.classList.contains('dark')
+  
+  const textColor = isDark ? '#cdd6f4' : '#1a1a1a'
+  const trackColor = isDark ? '#313244' : '#f0f0f0'
+  const textMuted = isDark ? '#a6adc8' : '#999'
+  const gridLineColor = isDark ? '#313244' : '#f0f0f0'
+  const tooltipBg = isDark ? '#1e1e2e' : '#fff'
+  const tooltipBorder = isDark ? '#313244' : '#eee'
+
+  cpuGauge?.setOption({
+    series: [{
+      axisLine: { lineStyle: { color: [[1, trackColor]] } },
+      detail: { color: textColor }
+    }]
+  })
+
+  memGauge?.setOption({
+    series: [{
+      axisLine: { lineStyle: { color: [[1, trackColor]] } },
+      detail: { color: textColor }
+    }]
+  })
+
+  trendChart?.setOption({
+    tooltip: {
+      backgroundColor: tooltipBg,
+      borderColor: tooltipBorder,
+      textStyle: { color: textColor }
+    },
+    xAxis: {
+      axisLine: { lineStyle: { color: gridLineColor } }
+    },
+    yAxis: {
+      splitLine: { lineStyle: { color: gridLineColor, type: 'dashed' } },
+      axisLabel: { color: textMuted }
+    }
+  })
+}
+
 async function pollData() {
   try {
     // CPU
@@ -204,14 +245,25 @@ onMounted(async () => {
   await nextTick()
   initGauges()
   initTrendChart()
+  updateChartsTheme()
   await pollData()
   pollTimer = setInterval(pollData, 2000)
   window.addEventListener('resize', handleResize)
+
+  // 监听 HTML class 变化以适配暗黑模式
+  observer = new MutationObserver(() => {
+    updateChartsTheme()
+  })
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
 })
 
 onBeforeUnmount(() => {
   clearInterval(pollTimer)
   window.removeEventListener('resize', handleResize)
+  observer?.disconnect()
   if (cpuGauge) { cpuGauge.dispose(); cpuGauge = null; }
   if (memGauge) { memGauge.dispose(); memGauge = null; }
   if (trendChart) { trendChart.dispose(); trendChart = null; }

@@ -122,6 +122,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // ── Chat AI ──────────────────────────────────────────────
     openChatWindow: () => ipcRenderer.send('open-chat-window'),
-})
 
-contextBridge.exposeInMainWorld('require', require)
+    // ── Float Window drag/click IPC ──
+    floatDragStart: (x, y) => ipcRenderer.send('float-drag-start', { x, y }),
+    floatDragMove: (x, y) => ipcRenderer.send('float-drag-move', { x, y }),
+    showMainWindow: () => ipcRenderer.send('show-main-window'),
+})

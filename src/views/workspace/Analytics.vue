@@ -60,10 +60,10 @@ const periods = [
 ]
 
 const kpis = [
-  { label: '任务完成率', value: '78%', change: '↑ 5%', changeType: 'up', icon: '✅', bg: '#f0fdf4' },
-  { label: '平均响应时间', value: '2.4h', change: '↓ 0.8h', changeType: 'up', icon: '⏱', bg: '#eff6ff' },
-  { label: '代码合并次数', value: '132', change: '↑ 24', changeType: 'up', icon: '🔀', bg: '#fef3c7' },
-  { label: '缺陷修复率', value: '92%', change: '↑ 3%', changeType: 'up', icon: '🐛', bg: '#fef2f2' },
+  { label: '任务完成率', value: '78%', change: '↑ 5%', changeType: 'up', icon: '✅', bg: 'rgba(39, 174, 96, 0.15)' },
+  { label: '平均响应时间', value: '2.4h', change: '↓ 0.8h', changeType: 'up', icon: '⏱', bg: 'rgba(52, 152, 219, 0.15)' },
+  { label: '代码合并次数', value: '132', change: '↑ 24', changeType: 'up', icon: '🔀', bg: 'rgba(243, 156, 18, 0.15)' },
+  { label: '缺陷修复率', value: '92%', change: '↑ 3%', changeType: 'up', icon: '🐛', bg: 'rgba(231, 76, 60, 0.15)' },
 ]
 
 const ranks = [
@@ -79,6 +79,7 @@ const barChartRef = ref(null)
 const pieChartRef = ref(null)
 let barChart = null
 let pieChart = null
+let observer = null
 
 function initBarChart() {
   if (!barChartRef.value) return
@@ -193,6 +194,59 @@ function initPieChart() {
   })
 }
 
+function updateChartsTheme() {
+  const isDark = document.documentElement.classList.contains('dark')
+  
+  const textColor = isDark ? '#cdd6f4' : '#333'
+  const textMuted = isDark ? '#a6adc8' : '#999'
+  const gridLineColor = isDark ? '#313244' : '#f0f0f0'
+  const tooltipBg = isDark ? '#1e1e2e' : '#fff'
+  const tooltipBorder = isDark ? '#313244' : '#eee'
+  
+  if (barChart) {
+    barChart.setOption({
+      tooltip: {
+        backgroundColor: tooltipBg,
+        borderColor: tooltipBorder,
+        textStyle: { color: textColor }
+      },
+      legend: {
+        textStyle: { color: textMuted }
+      },
+      xAxis: {
+        axisLine: { lineStyle: { color: gridLineColor } },
+        axisLabel: { color: textMuted }
+      },
+      yAxis: {
+        splitLine: { lineStyle: { color: gridLineColor, type: 'dashed' } },
+        axisLabel: { color: textMuted }
+      }
+    })
+  }
+  
+  if (pieChart) {
+    pieChart.setOption({
+      tooltip: {
+        backgroundColor: tooltipBg,
+        borderColor: tooltipBorder,
+        textStyle: { color: textColor }
+      },
+      legend: {
+        textStyle: { color: textMuted }
+      },
+      series: [{
+        itemStyle: { borderColor: isDark ? '#1e1e2e' : '#fff' },
+        label: {
+          rich: {
+            total: { color: textColor },
+            sub: { color: textMuted }
+          }
+        }
+      }]
+    })
+  }
+}
+
 function handleResize() {
   barChart?.resize()
   pieChart?.resize()
@@ -202,11 +256,22 @@ onMounted(async () => {
   await nextTick()
   initBarChart()
   initPieChart()
+  updateChartsTheme()
   window.addEventListener('resize', handleResize)
+  
+  // 监听 HTML class 变化以适配暗黑模式
+  observer = new MutationObserver(() => {
+    updateChartsTheme()
+  })
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
+  observer?.disconnect()
   barChart?.dispose()
   pieChart?.dispose()
 })
@@ -214,36 +279,36 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .analytics { display: flex; flex-direction: column; gap: 16px; }
-.analytics-toolbar { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 12px; padding: 10px 20px; border: 1px solid #f0f0f0; }
+.analytics-toolbar { display: flex; align-items: center; justify-content: space-between; background: var(--el-bg-color-overlay); border-radius: 12px; padding: 10px 20px; border: 1px solid var(--el-border-color-light); }
 .period-tabs { display: flex; gap: 4px; }
-.period-tab { padding: 6px 16px; border-radius: 8px; font-size: 13px; color: #666; cursor: pointer; transition: all 0.2s; }
-.period-tab:hover { background: #f5f5f5; }
-.period-tab.active { background: #1a1a1a; color: #fff; }
+.period-tab { padding: 6px 16px; border-radius: 8px; font-size: 13px; color: var(--el-text-color-regular); cursor: pointer; transition: all 0.2s; }
+.period-tab:hover { background: var(--el-fill-color-light); }
+.period-tab.active { background: var(--el-text-color-primary); color: var(--el-bg-color); }
 
 .kpi-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-.kpi-card { background: #fff; border-radius: 12px; padding: 18px; border: 1px solid #f0f0f0; display: flex; align-items: center; gap: 14px; }
+.kpi-card { background: var(--el-bg-color-overlay); border-radius: 12px; padding: 18px; border: 1px solid var(--el-border-color-light); display: flex; align-items: center; gap: 14px; }
 .kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
 .kpi-info { display: flex; flex-direction: column; }
-.kpi-label { font-size: 12px; color: #999; }
-.kpi-value { font-size: 22px; font-weight: 800; color: #1a1a1a; }
+.kpi-label { font-size: 12px; color: var(--el-text-color-secondary); }
+.kpi-value { font-size: 22px; font-weight: 800; color: var(--el-text-color-primary); }
 .kpi-change { font-size: 11px; }
 .kpi-change.up { color: #27ae60; }
 .kpi-change.down { color: #e74c3c; }
 
 .chart-section { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
-.chart-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #f0f0f0; }
-.chart-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1a1a1a; }
+.chart-card { background: var(--el-bg-color-overlay); border-radius: 12px; padding: 20px; border: 1px solid var(--el-border-color-light); }
+.chart-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--el-text-color-primary); }
 .echart-box { width: 100%; height: 280px; }
 
-.rank-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #f0f0f0; }
+.rank-card { background: var(--el-bg-color-overlay); border-radius: 12px; padding: 20px; border: 1px solid var(--el-border-color-light); }
 .rank-list { display: flex; flex-direction: column; gap: 12px; }
 .rank-item { display: flex; align-items: center; gap: 12px; }
-.rank-num { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #f5f5f5; color: #999; }
-.rank-num.top1 { background: #fef3c7; color: #f39c12; }
-.rank-num.top2 { background: #f0f0f0; color: #999; }
-.rank-num.top3 { background: #fef2f2; color: #e74c3c; }
-.rank-name { width: 60px; font-size: 13px; font-weight: 600; color: #333; }
-.rank-bar-wrap { flex: 1; height: 8px; background: #f5f5f5; border-radius: 4px; overflow: hidden; }
+.rank-num { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: var(--el-fill-color-light); color: var(--el-text-color-secondary); }
+.rank-num.top1 { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
+.rank-num.top2 { background: var(--el-fill-color-light); color: var(--el-text-color-placeholder); }
+.rank-num.top3 { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+.rank-name { width: 60px; font-size: 13px; font-weight: 600; color: var(--el-text-color-primary); }
+.rank-bar-wrap { flex: 1; height: 8px; background: var(--el-fill-color-light); border-radius: 4px; overflow: hidden; }
 .rank-bar { height: 100%; background: linear-gradient(90deg, #e74c3c, #f39c12); border-radius: 4px; transition: width 0.8s ease; }
-.rank-score { font-size: 14px; font-weight: 700; color: #1a1a1a; width: 32px; text-align: right; }
+.rank-score { font-size: 14px; font-weight: 700; color: var(--el-text-color-primary); width: 32px; text-align: right; }
 </style>
