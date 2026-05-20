@@ -165,13 +165,14 @@ function showMainWindow() {
 }
 
 // ── 主窗口 ──────────────────────────────────────────────────
-function createWindow() {
+function createWindow() {  
     mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        resizable: true,
         webPreferences: {
             nodeIntegration: true, // 可以设置这个值为true 使渲染进程也能使用nodejs环境
-            contextIsolation: true,
+            contextIsolation: true,  // 上下文隔离
             sandbox: false,  // 允许 preload 使用 Node.js 内置模块 (os, path 等)
             preload: path.join(__dirname, 'preload.js')
         }
@@ -377,6 +378,37 @@ ipcMain.on('open-chat-window', () => {
 // ── 启动 ─────────────────────────────────────────────────────
 app.whenReady().then(() => {
     createWindow()
+
+    const menuTemplate = [
+        {
+            label: '文件',
+            submenu: [
+                { label: '新建', accelerator: 'CmdOrCtrl+N', click: () => {} },
+                { type: 'separator' },
+                { label: '退出', accelerator: 'CmdOrCtrl+Q', click: () => app.quit() }
+            ]
+        },
+        {
+            label: '视图',
+            submenu: [
+                { label: '重新加载', accelerator: 'CmdOrCtrl+R', role: 'reload' },
+                { label: '开发者工具', accelerator: 'F12', role: 'toggleDevTools' },
+                { type: 'separator' },
+                { role: 'togglefullscreen' }
+            ]
+        },
+        {
+            label: '会话',
+            submenu: [
+                { label: '重新加载', accelerator: 'CmdOrCtrl+R', role: 'reload' },
+                { label: '开发者工具', accelerator: 'F12', role: 'toggleDevTools' },
+                { type: 'separator' },
+                { role: 'togglefullscreen' }
+            ]
+        }
+    ]
+    const menu = Menu.buildFromTemplate(menuTemplate)
+    Menu.setApplicationMenu(menu)
     // const win = createWindow()
     // remote.enable(win.webContents) // 允许渲染进程使用 remote 模块 获取 主进程信息和能力
     createTray()
